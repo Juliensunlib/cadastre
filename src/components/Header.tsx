@@ -25,7 +25,7 @@ const Header: React.FC = () => {
               />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">Sunlib</h1>
+              <h1 className="text-2xl font-bold">SunLib</h1>
               <p className="text-sunlib-100 text-sm">Géoservices IGN</p>
             </div>
           </div>
