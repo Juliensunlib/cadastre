@@ -39,24 +39,15 @@ export class IGNService {
   // Récupération des informations cadastrales basées sur les coordonnées
   static async getCadastralInfo(lat: number, lng: number): Promise<CadastralInfo | null> {
     try {
-      // Requête WFS vers l'API cadastre du Géoportail
-      const wfsUrl = `https://wxs.ign.fr/${IGN_API_KEY}/geoportail/wfs`;
-      const params = new URLSearchParams({
-        service: 'WFS',
-        version: '2.0.0',
-        request: 'GetFeature',
-        typeName: 'CADASTRALPARCELS.PARCELLAIRE_EXPRESS:parcelle',
-        outputFormat: 'application/json',
-        srsName: 'EPSG:4326',
-        count: '1'
-      });
+      // Utilisation de l'API Carto Cadastre pour récupérer les parcelles par intersection
+      const geojson = {
+        type: "Point",
+        coordinates: [lng, lat]
+      };
 
-      // Définir une bbox autour du point (environ 10 mètres)
-      const buffer = 0.0001; // Environ 10-20 mètres
-      const bbox = `${lng - buffer},${lat - buffer},${lng + buffer},${lat + buffer}`;
-      params.append('bbox', bbox);
-
-      const response = await fetch(`${wfsUrl}?${params.toString()}`);
+      const response = await fetch(
+        `https://apicarto.ign.fr/api/cadastre/parcelle?geom=${encodeURIComponent(JSON.stringify(geojson))}`
+      );
 
       if (!response.ok) {
         console.warn('Erreur API cadastre:', response.status);
@@ -75,16 +66,15 @@ export class IGNService {
       const feature = data.features[0];
       const props = feature.properties;
 
-      // Récupérer le nom de la commune
-      let commune = props.nom_com || props.commune || 'Commune inconnue';
+      console.log('Parcelle trouvée:', props); // Pour debug
 
       return {
-        commune: commune.toUpperCase(),
-        section: props.section || props.prefixe || 'XX',
-        numero: props.numero || props.parcelle || '0000',
+        commune: (props.nom_com || props.commune || 'Commune inconnue').toUpperCase(),
+        section: props.section || 'XX',
+        numero: props.numero || '0000',
         surface: props.contenance ? Math.round(props.contenance) : 0,
         contenance: props.contenance ? Math.round(props.contenance) : 0,
-        nature: this.getNatureCulture(props.type_culture || props.nature),
+        nature: props.type_culture || 'Non renseigné',
         proprietaire: undefined // Les données de propriétaires ne sont pas publiques
       };
 
