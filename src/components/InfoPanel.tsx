@@ -32,18 +32,6 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ cadastralInfo, coordinates, isLoa
     await IGNService.captureMap();
   };
 
-  if (isLoading) {
-    return (
-      <div className="card p-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-          <div className="h-4 bg-gray-200 rounded w-5/6"></div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-4">
       {/* Coordonnées */}
@@ -69,62 +57,78 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ cadastralInfo, coordinates, isLoa
         </div>
       )}
 
-      {/* Informations cadastrales */}
-      {cadastralInfo && (
+      {/* Informations cadastrales - Toujours affichées quand on a des coordonnées */}
+      {coordinates && (
         <div className="card p-4">
           <div className="flex items-center space-x-2 mb-3">
             <FileText className="h-5 w-5 text-sunlib-600" />
             <h3 className="font-semibold text-gray-800">Informations cadastrales</h3>
           </div>
-          
-          <div className="space-y-3">
-            <div className="flex items-center space-x-2">
-              <Home className="h-4 w-4 text-gray-400" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-800">{cadastralInfo.commune}</p>
-                <p className="text-xs text-gray-500">Commune</p>
-              </div>
+
+          {isLoading ? (
+            <div className="animate-pulse space-y-3">
+              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+              <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+              <div className="h-4 bg-gray-200 rounded w-2/3"></div>
             </div>
-            
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <p className="text-xs text-gray-500 mb-1">Section</p>
-                <p className="font-semibold text-gray-800">{cadastralInfo.section}</p>
-              </div>
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <p className="text-xs text-gray-500 mb-1">Numéro</p>
-                <p className="font-semibold text-gray-800">{cadastralInfo.numero}</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Ruler className="h-4 w-4 text-gray-400" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-800">{cadastralInfo.surface.toLocaleString()} m²</p>
-                <p className="text-xs text-gray-500">Surface cadastrale</p>
-              </div>
-            </div>
-            
-            <div className="bg-sunlib-50 p-3 rounded-lg border border-sunlib-200">
-              <p className="text-xs text-sunlib-600 mb-1">Nature du terrain</p>
-              <p className="font-semibold text-sunlib-800">{cadastralInfo.nature}</p>
-            </div>
-            
-            {cadastralInfo.proprietaire && (
+          ) : cadastralInfo ? (
+            <div className="space-y-3">
               <div className="flex items-center space-x-2">
-                <User className="h-4 w-4 text-gray-400" />
+                <Home className="h-4 w-4 text-gray-400" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-800">{cadastralInfo.proprietaire}</p>
-                  <p className="text-xs text-gray-500">Propriétaire</p>
+                  <p className="text-sm font-medium text-gray-800">{cadastralInfo.commune}</p>
+                  <p className="text-xs text-gray-500">Commune</p>
                 </div>
               </div>
-            )}
-            
-            <div className="mt-3 p-2 bg-blue-50 rounded text-xs text-blue-600">
-              <p className="font-medium">Référence cadastrale:</p>
-              <p className="font-mono">{cadastralInfo.section} {cadastralInfo.numero}</p>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-xs text-gray-500 mb-1">Section</p>
+                  <p className="font-semibold text-gray-800">{cadastralInfo.section}</p>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-xs text-gray-500 mb-1">Numéro</p>
+                  <p className="font-semibold text-gray-800">{cadastralInfo.numero}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Ruler className="h-4 w-4 text-gray-400" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-800">{cadastralInfo.surface.toLocaleString()} m²</p>
+                  <p className="text-xs text-gray-500">Surface cadastrale</p>
+                </div>
+              </div>
+
+              <div className="bg-sunlib-50 p-3 rounded-lg border border-sunlib-200">
+                <p className="text-xs text-sunlib-600 mb-1">Nature du terrain</p>
+                <p className="font-semibold text-sunlib-800">{cadastralInfo.nature}</p>
+              </div>
+
+              {cadastralInfo.proprietaire && (
+                <div className="flex items-center space-x-2">
+                  <User className="h-4 w-4 text-gray-400" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-800">{cadastralInfo.proprietaire}</p>
+                    <p className="text-xs text-gray-500">Propriétaire</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="mt-3 p-2 bg-blue-50 rounded text-xs text-blue-600">
+                <p className="font-medium">Référence cadastrale:</p>
+                <p className="font-mono">{cadastralInfo.section} {cadastralInfo.numero}</p>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-sm text-yellow-800 font-medium mb-1">Aucune parcelle trouvée</p>
+              <p className="text-xs text-yellow-700">
+                Aucune donnée cadastrale disponible pour cette position. Essayez de cliquer sur une zone plus proche d'une parcelle cadastrale.
+              </p>
+            </div>
+          )}
         </div>
       )}
 
@@ -148,13 +152,7 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ cadastralInfo, coordinates, isLoa
             Capture d'écran
           </button>
         </div>
-        
-        {!cadastralInfo && coordinates && (
-          <div className="mt-3 p-2 bg-yellow-50 rounded text-xs text-yellow-700">
-            Cliquez sur la carte pour obtenir les informations cadastrales
-          </div>
-        )}
-        
+
         {cadastralInfo && (
           <div className="mt-3 p-2 bg-green-50 rounded text-xs text-green-700">
             <strong>PDF officiel:</strong> Document avec en-tête officiel, coordonnées géographiques et capture de carte

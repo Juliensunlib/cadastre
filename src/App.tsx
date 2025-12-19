@@ -141,7 +141,7 @@ function App() {
             <li>• Exportez vos données avec les boutons d'action</li>
           </ul>
           <div className="mt-3 p-2 bg-sunlib-50 rounded text-xs text-sunlib-700">
-            <strong>Astuce:</strong> Les informations cadastrales sont générées en fonction des coordonnées cliquées
+            <strong>Astuce:</strong> Les informations cadastrales sont récupérées automatiquement depuis l'API du Géoportail
           </div>
         </div>
       )}
