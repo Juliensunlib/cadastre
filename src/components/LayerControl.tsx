@@ -50,7 +50,10 @@ const LayerControl: React.FC<LayerControlProps> = ({ layers, onToggleLayer }) =>
         <div className="text-xs text-blue-700 space-y-1">
           <p>• <strong>Plan IGN:</strong> Carte OpenStreetMap France</p>
           <p>• <strong>Vue aérienne:</strong> Images satellite Google Maps</p>
-          <p>• <strong>Cadastre:</strong> Parcelles cadastrales + OSM</p>
+          <p>• <strong>Cadastre:</strong> Parcelles cadastrales IGN + satellite</p>
+        </div>
+        <div className="mt-2 text-xs text-blue-600">
+          <p className="italic">Zoomez pour voir les parcelles (zoom ≥ 13)</p>
         </div>
       </div>
     </div>

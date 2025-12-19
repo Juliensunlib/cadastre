@@ -81,17 +81,19 @@ const MapComponent: React.FC<MapComponentProps> = ({ selectedLocation, activeLay
       case 'cadastre':
         return (
           <React.Fragment key="cadastre">
+            {/* Fond de carte Google Satellite pour meilleure lisibilité */}
             <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution="© OpenStreetMap contributors"
-              maxZoom={19}
+              url="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
+              attribution="© Google Maps"
+              maxZoom={20}
             />
+            {/* Couche cadastrale IGN par-dessus */}
             <TileLayer
-              url="https://wxs.ign.fr/choisirgeoportail/geoportail/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=CADASTRALPARCELS.PARCELLAIRE_EXPRESS&STYLE=PCI%20vecteur&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&FORMAT=image%2Fpng"
+              url="https://wxs.ign.fr/decouverte/geoportail/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=CADASTRALPARCELS.PARCELLAIRE_EXPRESS&STYLE=PCI%20vecteur&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&FORMAT=image%2Fpng"
               attribution="© IGN - Cadastre"
-              opacity={0.7}
-              maxZoom={19}
-              minZoom={1}
+              opacity={0.85}
+              maxZoom={20}
+              minZoom={13}
             />
           </React.Fragment>
         );
