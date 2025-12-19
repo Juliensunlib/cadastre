@@ -39,55 +39,81 @@ export class IGNService {
   // Récupération des informations cadastrales basées sur les coordonnées
   static async getCadastralInfo(lat: number, lng: number): Promise<CadastralInfo | null> {
     try {
-      // Utilisation de l'API de géocodage inverse pour obtenir l'adresse
-      const reverseResponse = await fetch(
-        `https://api-adresse.data.gouv.fr/reverse/?lon=${lng}&lat=${lat}`
-      );
-      
-      let commune = 'Commune inconnue';
-      let codeCommune = '00000';
-      
-      if (reverseResponse.ok) {
-        const reverseData = await reverseResponse.json();
-        if (reverseData.features && reverseData.features.length > 0) {
-          const feature = reverseData.features[0];
-          commune = feature.properties.city || feature.properties.name || 'Commune inconnue';
-          codeCommune = feature.properties.citycode || '00000';
-        }
+      // Requête WFS vers l'API cadastre du Géoportail
+      const wfsUrl = `https://wxs.ign.fr/${IGN_API_KEY}/geoportail/wfs`;
+      const params = new URLSearchParams({
+        service: 'WFS',
+        version: '2.0.0',
+        request: 'GetFeature',
+        typeName: 'CADASTRALPARCELS.PARCELLAIRE_EXPRESS:parcelle',
+        outputFormat: 'application/json',
+        srsName: 'EPSG:4326',
+        count: '1'
+      });
+
+      // Définir une bbox autour du point (environ 10 mètres)
+      const buffer = 0.0001; // Environ 10-20 mètres
+      const bbox = `${lng - buffer},${lat - buffer},${lng + buffer},${lat + buffer}`;
+      params.append('bbox', bbox);
+
+      const response = await fetch(`${wfsUrl}?${params.toString()}`);
+
+      if (!response.ok) {
+        console.warn('Erreur API cadastre:', response.status);
+        return null;
       }
-      
-      // Génération d'informations cadastrales cohérentes basées sur les coordonnées
-      return this.generateCadastralInfo(lat, lng, commune, codeCommune);
+
+      const data = await response.json();
+
+      // Vérifier si des parcelles ont été trouvées
+      if (!data.features || data.features.length === 0) {
+        console.warn('Aucune parcelle cadastrale trouvée à ces coordonnées');
+        return null;
+      }
+
+      // Extraire les informations de la première parcelle
+      const feature = data.features[0];
+      const props = feature.properties;
+
+      // Récupérer le nom de la commune
+      let commune = props.nom_com || props.commune || 'Commune inconnue';
+
+      return {
+        commune: commune.toUpperCase(),
+        section: props.section || props.prefixe || 'XX',
+        numero: props.numero || props.parcelle || '0000',
+        surface: props.contenance ? Math.round(props.contenance) : 0,
+        contenance: props.contenance ? Math.round(props.contenance) : 0,
+        nature: this.getNatureCulture(props.type_culture || props.nature),
+        proprietaire: undefined // Les données de propriétaires ne sont pas publiques
+      };
+
     } catch (error) {
-      console.warn('Erreur lors de la récupération des infos cadastrales:', error);
-      return this.generateCadastralInfo(lat, lng, 'Commune inconnue', '00000');
+      console.error('Erreur lors de la récupération des infos cadastrales:', error);
+      return null;
     }
   }
-  
-  // Génération d'informations cadastrales cohérentes
-  private static generateCadastralInfo(lat: number, lng: number, commune: string, codeCommune: string): CadastralInfo {
-    // Utilisation des coordonnées pour générer des données cohérentes
-    const latInt = Math.floor(Math.abs(lat * 1000)) % 1000;
-    const lngInt = Math.floor(Math.abs(lng * 1000)) % 1000;
-    
-    const sections = ['AK', 'BL', 'CM', 'DN', 'EO', 'FP', 'GQ', 'HR', 'IS', 'JT'];
-    const natures = ['SOL', 'TERRE', 'PRES', 'BOIS', 'LANDE', 'JARDIN', 'VERGER', 'VIGNE'];
-    
-    // Génération déterministe basée sur les coordonnées
-    const sectionIndex = (latInt + lngInt) % sections.length;
-    const natureIndex = (latInt * lngInt) % natures.length;
-    const numero = String((latInt + lngInt) % 9999).padStart(4, '0');
-    const surface = 100 + ((latInt + lngInt) % 1900);
-    
-    return {
-      commune: commune.toUpperCase(),
-      section: sections[sectionIndex],
-      numero: numero,
-      surface: surface,
-      contenance: surface,
-      nature: natures[natureIndex],
-      proprietaire: Math.random() > 0.7 ? 'PROPRIÉTAIRE PRIVÉ' : undefined
+
+  // Convertir les codes de culture en libellés lisibles
+  private static getNatureCulture(code: string | undefined): string {
+    if (!code) return 'Non renseigné';
+
+    const natures: { [key: string]: string } = {
+      'S': 'SOL',
+      'T': 'TERRE',
+      'P': 'PRÉS',
+      'B': 'BOIS',
+      'L': 'LANDE',
+      'J': 'JARDIN',
+      'V': 'VERGER',
+      'VG': 'VIGNE',
+      'AB': 'TERRAIN À BÂTIR',
+      'BT': 'BÂTI',
+      'CH': 'CHEMIN',
+      'E': 'EAU'
     };
+
+    return natures[code.toUpperCase()] || code;
   }
   
   // Export des données cadastrales en PDF officiel
